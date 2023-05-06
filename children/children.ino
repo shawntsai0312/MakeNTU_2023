@@ -5,11 +5,12 @@
 bool children[4] = {false, false, false, false};
 int parent = -1;
 unsigned long t = 0;
-const int own_id = 3;
+const int own_id = 1;
 bool coordinateIsSent = false;
 Servo myservo; // 建立一個 servo 物件，最多可建立 12個 servo
 int pos = 0; // 設定 Servo 位置的變數
-int ctsPin = 5; //touch sensor define
+const int SERVO_PIN = 5;
+int ctsPin = 4; //touch sensor define
 bool lockState = false;
 /*-------------------------- global variable/constant declaration end --------------------------*/
 
@@ -17,12 +18,17 @@ bool lockState = false;
 bool light_on = false;
 const unsigned long light_duration = 5000;
 unsigned long lightOnTime;
+bool shine_on = false;
+const unsigned long shine_duration = 5000;
+unsigned long shineOnTime;
 unsigned long currentTime;
 
-const int LIGHT_PIN = 4;    // Digital PIN
-const int BRIGHTNESS = 128; // 亮度
+const int LIGHT_PIN_SHINE = 2;//照明燈
+const int LIGHT_PIN = 3;    // Digital PIN 提示燈
+const int BRIGHTNESS = 50; // 亮度
 const int LIGHT_NUM = 100;  // 最多燈數(可超過實際燈數)
 // edit end
+CRGB shineLeds[LIGHT_NUM];
 CRGB leds[LIGHT_NUM]; // 定義FastLED類別
 // colors
 int rainbow16[16][3] = {{255, 0, 0},      // 紅
@@ -50,7 +56,14 @@ void showAll(int color)
   }
   FastLED.show();
 }
-
+void shineAll(int color)
+{
+  for (int i = 0; i < LIGHT_NUM; i++)
+  {
+    shineLeds[i] = CRGB(rainbow16[color][0], rainbow16[color][1], rainbow16[color][2]);
+  }
+  FastLED.show();
+}
 void clearAll()
 {
   for (int i = 0; i < LIGHT_NUM; i++)
@@ -59,7 +72,14 @@ void clearAll()
   }
   FastLED.show();
 }
-
+void clearShineAll()
+{
+  for (int i = 0; i < LIGHT_NUM; i++)
+  {
+    shineLeds[i] = CRGB(0, 0, 0);
+  }
+  FastLED.show();
+}
 void Gradient(int color, int _start, int _end, int delay_t)
 {
   // Serial.print(color);
@@ -92,9 +112,10 @@ void setup()
 {
   // put your setup code here, to run once:
   FastLED.addLeds<WS2812B, LIGHT_PIN, GRB>(leds, LIGHT_NUM); // 設定串列全彩LED參數
+  FastLED.addLeds<WS2812B, LIGHT_PIN_SHINE, GRB>(shineLeds, LIGHT_NUM); // 設定串列全彩LED參數
   FastLED.setBrightness(BRIGHTNESS);
-  pinMode(ctsPin, INPUT);
-  myservo.attach(9);
+  pinMode(ctsPin, INPUT_PULLUP);
+  myservo.attach(SERVO_PIN);
   Serial.begin(115200);  // up
   Serial1.begin(115200); // down
   Serial2.begin(115200); // left
@@ -283,12 +304,25 @@ void loop()
   // put your main code here, to run repeatedly:
   /*------------------------------ LED control ------------------------------*/
   int ctsValue = digitalRead(ctsPin);
-  if (ctsValue == HIGH && light_on == false)
+  Serial.println(ctsValue);
+  if (ctsValue == HIGH)
   {
-    showAll(2);
-    light_on = true;
-    lightOnTime = millis();
+    Serial.println("shine all");
+    shineAll(2);
+    shine_on = true;
+    shineOnTime = millis();
   }
+  if (shine_on)
+  {
+    if (millis() - shineOnTime > shine_duration)
+    {
+      shine_on = false;
+      clearShineAll();
+    }
+  }
+  
+
+  
   if (light_on)
   {
     if (millis() - lightOnTime > light_duration)
