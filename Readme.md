@@ -1,5 +1,4 @@
-# Algorithm DIY
-B10901176 蔡弘祥 Hung Shiang Tsai
+# 2023 MakeNTU Team12 妹🉑️恩🪜U
 
 ## 1. Introduction
 
